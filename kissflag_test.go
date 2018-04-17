@@ -139,7 +139,7 @@ func TestBindEVar(t *testing.T) {
 			wantErr: true,
 			value:   time.Now().Format(time.RFC3339),
 		},
-    {
+		{
 			name: "Test string slice",
 			args: args{
 				tag:    "e8strslice",
@@ -147,7 +147,8 @@ func TestBindEVar(t *testing.T) {
 			},
 			wantErr: false,
 			value:   "test1,test2",
-  }
+		},
+	}
 
 	// Initialize prefix
 	kissflag.SetPrefix(prefix)
@@ -173,12 +174,12 @@ func TestBindEVar(t *testing.T) {
 						err := errors.New("test value mismatch")
 						t.Errorf("BindEVar() error = %v, wantErr %v", err, tt.wantErr)
 					}
-        case *[]string:
-          tval := strings.Split(tt.value, ",")
-          if !reflect.DeepEqual(*tt.args.target.(*[]string), tval) {
-            err := errors.New("test value mismatch")
-            t.Errorf("BindEVar() error = %v, wantErr %v", err, tt.wantErr)
-          }
+				case *[]string:
+					tval := strings.Split(tt.value, ",")
+					if !reflect.DeepEqual(*tt.args.target.(*[]string), tval) {
+						err := errors.New("test value mismatch")
+						t.Errorf("BindEVar() error = %v, wantErr %v", err, tt.wantErr)
+					}
 				case *int:
 					if tval := strconv.FormatInt(int64(*tt.args.target.(*int)), 10); tval != tt.value {
 						err := errors.New("test value mismatch")
