@@ -8,6 +8,7 @@ package kissflag_test
 import (
 	"errors"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 	"testing"
@@ -99,6 +100,15 @@ func TestBindEVar(t *testing.T) {
 			wantErr: false,
 			value:   "",
 		},
+		{
+			name: "Test string slice",
+			args: args{
+				tag:    "e8strslice",
+				target: &resultStr,
+			},
+			wantErr: false,
+			value:   "test1,test2",
+		},
 	}
 
 	// Initialize prefix
@@ -114,6 +124,12 @@ func TestBindEVar(t *testing.T) {
 			switch tt.args.target.(type) {
 			case *string:
 				if *tt.args.target.(*string) != tt.value {
+					err := errors.New("test value mismatch")
+					t.Errorf("BindEVar() error = %v, wantErr %v", err, tt.wantErr)
+				}
+			case *[]string:
+				tval := strings.Split(tt.value, ",")
+				if !reflect.DeepEqual(*tt.args.target.(*[]string), tval) {
 					err := errors.New("test value mismatch")
 					t.Errorf("BindEVar() error = %v, wantErr %v", err, tt.wantErr)
 				}
