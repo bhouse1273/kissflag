@@ -8,6 +8,7 @@ package kissflag_test
 import (
 	"errors"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 	"testing"
@@ -138,7 +139,15 @@ func TestBindEVar(t *testing.T) {
 			wantErr: true,
 			value:   time.Now().Format(time.RFC3339),
 		},
-	}
+    {
+			name: "Test string slice",
+			args: args{
+				tag:    "e8strslice",
+				target: &resultStr,
+			},
+			wantErr: false,
+			value:   "test1,test2",
+  }
 
 	// Initialize prefix
 	kissflag.SetPrefix(prefix)
@@ -156,6 +165,7 @@ func TestBindEVar(t *testing.T) {
 			if err = kissflag.BindEVar(tt.args.tag, tt.args.target); (err != nil) != tt.wantErr {
 				t.Errorf("BindEVar() error = %v, wantErr %v", err, tt.wantErr)
 			}
+
 			if err == nil {
 				switch tt.args.target.(type) {
 				case *string:
@@ -163,6 +173,12 @@ func TestBindEVar(t *testing.T) {
 						err := errors.New("test value mismatch")
 						t.Errorf("BindEVar() error = %v, wantErr %v", err, tt.wantErr)
 					}
+        case *[]string:
+          tval := strings.Split(tt.value, ",")
+          if !reflect.DeepEqual(*tt.args.target.(*[]string), tval) {
+            err := errors.New("test value mismatch")
+            t.Errorf("BindEVar() error = %v, wantErr %v", err, tt.wantErr)
+          }
 				case *int:
 					if tval := strconv.FormatInt(int64(*tt.args.target.(*int)), 10); tval != tt.value {
 						err := errors.New("test value mismatch")
@@ -183,7 +199,6 @@ func TestBindEVar(t *testing.T) {
 						err := errors.New("test value mismatch")
 						t.Errorf("BindEVar() error = %v, wantErr %v", err, tt.wantErr)
 					}
-
 				case *float32:
 					if tval := strconv.FormatFloat(float64(*tt.args.target.(*float32)), 'f', 1, 32); tval != tt.value {
 						err := errors.New("test value mismatch")

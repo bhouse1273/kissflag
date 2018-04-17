@@ -37,6 +37,8 @@ func BindEVar(tag string, target interface{}) error {
 		switch target.(type) {
 		case *string:
 			*target.(*string) = value
+		case *[]string:
+			*target.(*[]string) = strings.Split(value, ",")
 		case *bool:
 			*target.(*bool), err = strconv.ParseBool(value)
 		case *int:
