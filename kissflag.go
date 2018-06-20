@@ -28,6 +28,10 @@ func BindEVar(tag string, target interface{}) error {
 		err = errors.New("target argument may not be nil")
 		return err
 	}
+	// Enforce dashes-to-underbars
+	if strings.Contains(tag, "-") {
+		tag = strings.Replace(tag, "-", "_", -1)
+	}
 	// Enforce naming convention assuming a prefix match indicates tag is preformatted
 	if len(tag) <= len(prefix) || strings.ToUpper(tag[0:len(prefix)]) != prefix {
 		tag = prefix + strings.ToUpper(tag)
