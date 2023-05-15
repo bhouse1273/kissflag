@@ -8,12 +8,53 @@ package kissflag
 import (
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 )
 
+const tagName string = "evar"
+
 var prefix string
+
+// BindAllEVars binds all env vars matching prefix and config struct evar tags
+func BindAllEVars(tconfig interface{}) error {
+	var err error
+	var tv interface{}
+	val := reflect.ValueOf(tconfig)
+	typ := val.Type()
+
+	for i := 0; i < val.NumField(); i++ {
+		field := val.Field(i)
+		fieldType := typ.Field(i)
+		if tag, ok := fieldType.Tag.Lookup(tagName); ok {
+			evar := strings.ToUpper(fmt.Sprint(prefix, tag))
+			if value, ok := os.LookupEnv(evar); ok {
+				if field.CanSet() {
+					switch field.Kind() {
+					case reflect.String:
+						field.SetString(value)
+					case reflect.Bool:
+						tv, err = strconv.ParseBool(value)
+						if err != nil {
+							break
+						}
+						field.SetBool(tv.(bool))
+					case reflect.Int64:
+						tv, err = strconv.ParseInt(value, 10, 64)
+						if err != nil {
+							break
+						}
+						field.SetInt(tv.(int64))
+					}
+				}
+			}
+		}
+	}
+	return err
+}
 
 // BindEVar assigns the value of a named configuration value
 func BindEVar(tag string, target interface{}) error {
