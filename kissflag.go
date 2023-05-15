@@ -24,8 +24,8 @@ func BindAllEVars(tconfig interface{}) error {
 	var err error
 	var tv interface{}
 	val := reflect.ValueOf(tconfig)
-	typ := val.Type()
 	rval := val.Elem()
+	typ := rval.Type()
 
 	for i := 0; i < rval.NumField(); i++ {
 		field := rval.Field(i)
