@@ -25,9 +25,10 @@ func BindAllEVars(tconfig interface{}) error {
 	var tv interface{}
 	val := reflect.ValueOf(tconfig)
 	typ := val.Type()
+	rval := val.Elem()
 
-	for i := 0; i < val.NumField(); i++ {
-		field := val.Field(i)
+	for i := 0; i < rval.NumField(); i++ {
+		field := rval.Field(i)
 		fieldType := typ.Field(i)
 		if tag, ok := fieldType.Tag.Lookup(tagName); ok {
 			evar := strings.ToUpper(fmt.Sprint(prefix, tag))
