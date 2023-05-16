@@ -23,32 +23,53 @@ var prefix string
 func BindAllEVars(tconfig interface{}) error {
 	var err error
 	var tv interface{}
-	val := reflect.ValueOf(tconfig)
-	rval := val.Elem()
+
+	// Get config pointer
+	configPtr := reflect.ValueOf(tconfig)
+
+	// Dereference pointer type
+	rval := configPtr.Elem()
 	typ := rval.Type()
 
+	// Iterate the attributes by index
 	for i := 0; i < rval.NumField(); i++ {
 		field := rval.Field(i)
 		fieldType := typ.Field(i)
+		// Get evar tag value
 		if tag, ok := fieldType.Tag.Lookup(tagName); ok {
+			// Format env variable name
 			evar := strings.ToUpper(fmt.Sprint(prefix, tag))
-			if value, ok := os.LookupEnv(evar); ok {
+			// Get env variable value
+			if value, ok := os.LookupEnv(evar); ok && value != "" {
 				if field.CanSet() {
+					// Assign value to attribute according to field.Kind()
 					switch field.Kind() {
-					case reflect.String:
-						field.SetString(value)
 					case reflect.Bool:
 						tv, err = strconv.ParseBool(value)
 						if err != nil {
 							break
 						}
 						field.SetBool(tv.(bool))
-					case reflect.Int64:
+					case reflect.Float64:
+						tv, err = strconv.ParseFloat(value, 64)
+						if err != nil {
+							break
+						}
+						field.SetFloat(tv.(float64))
+					case reflect.Int, reflect.Int64:
 						tv, err = strconv.ParseInt(value, 10, 64)
 						if err != nil {
 							break
 						}
 						field.SetInt(tv.(int64))
+					case reflect.Slice:
+						tv = strings.Split(value, ",")
+						tvPtr := reflect.ValueOf(tv)
+						field.Set(tvPtr)
+					case reflect.String:
+						field.SetString(value)
+					default:
+						err = errors.New("Unsupported target type")
 					}
 				}
 			}

@@ -9,7 +9,8 @@ Create your CLI application using Cobra, defining whatever configuration values 
 
 1) In initConfig() call kissflag.SetPrefix() to assign your environment variable prefix (good to have to avoid name collisions)
 2) In either rootCmd or a subcommand, explicitly call kissflag.BindEVar() for each configuration value that you want set via environment variable
-3) If you have a secret store (like Kubernetes) that returns secret values as Base64-encoded strings, call kissflag.DecodeBase64() to decode the value 
+3) Rather than bind configuration values one at a time, call kissFlag.BindAllEVars() if the config struct has evar tag annotations
+4) If you have a secret store (like Kubernetes) that returns secret values as Base64-encoded strings, call kissflag.DecodeBase64() to decode the value 
 
 ## API Reference
 ---
@@ -45,6 +46,52 @@ When creating a containerized micro-service, it is a good practice to have a ser
 #### Example:
 
 `kissflag.SetPrefix("MYPREFIX_")`
+
+---
+### BindAllEVars
+
+`BindAllEVars(tconfig interface{}) error`
+
+#### Arguments:
+
+<table border=2>
+    <tr>
+        <td>No.</td>
+        <td>Name</td>
+        <td>Type</td>
+        <td>Comment</td>
+    </tr>
+    <tr>
+        <td>1.</td> 
+        <td>tconfig</td>
+        <td>interface{}</td> 
+        <td>The configuration struct instance to bind environmental variable values to.</td>
+    </tr>
+</table>
+
+#### Returns: 
+
+nil error if successful  
+
+Otherwise, error conditions are: 
+* If value of the environmental variable cannot be converted, returns the error returned by the corresponding conversion function (from standard packages)
+* If the type of the target is not recognized, returns a "unsupported target type" error 
+
+#### Discussion: 
+
+The BindAllEVars() function depends on annotating your configuration type struct with `evar:"argname"` tags. Note that "argname" needs to be exactly the same as the corresponding command-line argument name. If an environmental variable
+having the name DGS_ARGNAME exists, its non-empty value will be assigned to the tagged struct attribute.
+#### Tag Example:
+`type Config struct {`<br>
+&nbsp;&nbsp;&nbsp;``   Name   string `evars:"name"``<br>
+`}`<br>
+`config := Config{}`<br>
+Given a prefix of "MYPREFIX_", the value of an environmental variable named `MYPREFIX_NAME` will be bound to `config.Name` 
+#### Example:
+
+`if err := kissflag.BindAllEVars(&config); err != nil {`<br>
+&nbsp;&nbsp;&nbsp;`   log.Fatalln("Config error:", err)`<br>
+`}`<br>
 
 ---
 ### BindEVar
